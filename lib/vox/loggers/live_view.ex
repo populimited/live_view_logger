@@ -4,7 +4,7 @@ defmodule Vox.Loggers.LiveView do
 
   Attach in your application supervisor:
 
-      :ok = Vox.Loggers.LiveView.attach(strip_prefix: "Elixir.VoxWeb.")
+      :ok = Vox.Loggers.LiveView.attach(filter_keys: ["password"])
 
   Logs `mount`, `handle_params` and `handle_event` stop/exception events as a
   single line with action, filtered params, user, status, outcome and duration.
@@ -72,8 +72,6 @@ defmodule Vox.Loggers.LiveView do
 
   ## Options
 
-    * `:strip_prefix` (required) - module name prefix removed when building
-      the action label, e.g. `"Elixir.VoxWeb."`.
     * `:filter_keys` - param key names to mask as `"[FILTERED]"` in the log.
       Matching is case-insensitive substring based (`"password"` masks
       `"password_confirmation"`). Defaults to `[]`, meaning no filtering.
@@ -81,9 +79,7 @@ defmodule Vox.Loggers.LiveView do
   `:skip_events` and `:record` can only be set per module, via
   `logger_opts/0`.
   """
-  def attach(opts) do
-    Keyword.fetch!(opts, :strip_prefix)
-
+  def attach(opts \\ []) do
     Enum.each(@events, fn event ->
       handler_id = {@handler_prefix, event}
       _ = :telemetry.detach(handler_id)
@@ -141,7 +137,7 @@ defmodule Vox.Loggers.LiveView do
 
     resource =
       view_name
-      |> String.replace(Keyword.fetch!(opts, :strip_prefix), "")
+      |> String.replace("Elixir.", "")
       |> String.replace("Live", "")
       |> String.downcase()
       |> String.split(".")

@@ -8,7 +8,6 @@ Attach in your application supervisor:
 ```elixir
 :ok =
   Vox.Loggers.LiveView.attach(
-    strip_prefix: "Elixir.VoxWeb.",
     filter_keys: ["password"]
   )
 ```

@@ -43,7 +43,7 @@ defmodule Vox.Loggers.LiveViewTest do
 
   describe "attach/1" do
     test "returns :ok and logs emitted events" do
-      assert :ok = LiveView.attach(strip_prefix: "Elixir.VoxWeb.")
+      assert :ok = LiveView.attach()
 
       log =
         capture_log(fn ->
@@ -54,12 +54,12 @@ defmodule Vox.Loggers.LiveViewTest do
           )
         end)
 
-      assert log =~ "action=user.index"
+      assert log =~ "action=voxweb.user.index"
       assert log =~ "status=ok"
     end
 
     test "uses the live_action as suffix when no event is given" do
-      assert :ok = LiveView.attach(strip_prefix: "Elixir.VoxWeb.")
+      assert :ok = LiveView.attach()
 
       log =
         capture_log(fn ->
@@ -70,13 +70,7 @@ defmodule Vox.Loggers.LiveViewTest do
           )
         end)
 
-      assert log =~ "action=user.edit"
-    end
-
-    test "raises when :strip_prefix is missing" do
-      assert_raise KeyError, ~r/key :strip_prefix not found/, fn ->
-        LiveView.attach([])
-      end
+      assert log =~ "action=voxweb.user.edit"
     end
   end
 
@@ -93,7 +87,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_event, :stop, %{duration: native_us(1_512)}, metadata)
         end)
 
-      assert log =~ "action=user.save"
+      assert log =~ "action=voxweb.user.save"
       assert log =~ "resource_id=3"
       assert log =~ "params=%{\"id\" => \"3\"}"
       assert log =~ "user=7 (u@x.io)"
@@ -110,7 +104,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=user.edit"
+      assert log =~ "action=voxweb.user.edit"
       refute log =~ "resource_id="
     end
 
@@ -125,7 +119,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=user.edit"
+      assert log =~ "action=voxweb.user.edit"
       assert log =~ "resource_id=42"
     end
 
@@ -152,7 +146,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=user.validate"
+      assert log =~ "action=voxweb.user.validate"
     end
 
     test "skips sockets without a live_action" do
@@ -227,7 +221,6 @@ defmodule Vox.Loggers.LiveViewTest do
       log =
         capture_log(fn ->
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
-            strip_prefix: "Elixir.VoxWeb.",
             filter_keys: ["password"]
           )
         end)
@@ -244,7 +237,6 @@ defmodule Vox.Loggers.LiveViewTest do
       log =
         capture_log(fn ->
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
-            strip_prefix: "Elixir.VoxWeb.",
             filter_keys: ["PASSWORD"]
           )
         end)
@@ -310,7 +302,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=user.save"
+      assert log =~ "action=voxweb.user.save"
     end
 
     test "skips events from a module using the macro" do
@@ -325,7 +317,7 @@ defmodule Vox.Loggers.LiveViewTest do
     end
   end
 
-  defp emit(action, status, measurements, metadata, opts \\ [strip_prefix: "Elixir.VoxWeb."]) do
+  defp emit(action, status, measurements, metadata, opts \\ []) do
     LiveView.handle_event([:phoenix, :live_view, action, status], measurements, metadata, opts)
   end
 
