@@ -119,7 +119,7 @@ defmodule Vox.Loggers.LiveViewTest do
 
       assert log =~ "action=vox_web.user.save"
       assert log =~ "resource_id=3"
-      assert log =~ "params=%{\"id\" => \"3\"}"
+      assert log =~ "\n  Parameters: %{\"id\" => \"3\"}"
       assert log =~ "user=7 (u@x.io)"
       assert log =~ "status=ok"
       assert log =~ "outcome=no-change"
@@ -256,7 +256,7 @@ defmodule Vox.Loggers.LiveViewTest do
           )
         end)
 
-      assert log =~ "params=%{\"id\" => \"3\", \"password\" => \"[FILTERED]\"}"
+      assert log =~ "\n  Parameters: %{\"id\" => \"3\", \"password\" => \"[FILTERED]\"}"
     end
 
     test "masks atom-keyed params and substrings of :filter_keys" do
@@ -272,7 +272,7 @@ defmodule Vox.Loggers.LiveViewTest do
           )
         end)
 
-      assert log =~ "params=%{password_confirmation: \"[FILTERED]\"}"
+      assert log =~ "\n  Parameters: %{password_confirmation: \"[FILTERED]\"}"
     end
 
     test "ignores non-list :filter_keys values" do
@@ -285,7 +285,7 @@ defmodule Vox.Loggers.LiveViewTest do
           )
         end)
 
-      assert log =~ "params=%{\"password\" => \"hunter2\"}"
+      assert log =~ "\n  Parameters: %{\"password\" => \"hunter2\"}"
     end
 
     test "logs params unfiltered without :filter_keys" do
@@ -299,7 +299,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "params=%{\"password\" => \"hunter2\"}"
+      assert log =~ "\n  Parameters: %{\"password\" => \"hunter2\"}"
     end
 
     test "defaults duration to 0.0ms when missing" do

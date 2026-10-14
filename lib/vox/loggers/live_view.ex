@@ -197,14 +197,14 @@ defmodule Vox.Loggers.LiveView do
        ) do
     user = if user, do: "user=#{user.id} (#{user.email})"
     action = if action, do: "action=#{action}"
-    params = if params, do: "params=#{params}"
+    params = if params, do: "\n  Parameters: #{params}"
     resource = if resource, do: "resource=#{resource}"
     resource_id = if resource_id, do: "resource_id=#{resource_id}"
     duration = if duration, do: "duration=#{duration}ms"
     return_outcome = if return_outcome, do: "outcome=#{return_outcome}"
 
     Logger.info(
-      "LiveView #{action} #{params} #{user} #{resource} #{resource_id} #{status} #{return_outcome} #{duration}"
+      "LiveView #{action} #{user} #{resource} #{resource_id} #{status} #{return_outcome} #{duration}#{params}"
     )
   end
 

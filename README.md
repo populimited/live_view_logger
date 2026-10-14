@@ -47,13 +47,14 @@ A single line per `handle_params` and `handle_event` invocation, plus
 `mount` exceptions:
 
 ```
-LiveView action=wave_web.root.company.edit params=%{"id" => "1"} user=1 (daniele@dev.com) resource=Wave.Root.Company resource_id=1 status=ok outcome=re-rendered duration=1.7ms
+LiveView action=wave_web.root.company.edit user=1 (daniele@dev.com) resource=Wave.Root.Company resource_id=1 status=ok outcome=re-rendered duration=1.7ms
+  Parameters: %{"id" => "1"}
 ```
 
 | Field | Meaning |
 |---|---|
 | `action` | view path plus event name or `live_action`, snake cased: module `WaveWeb.Root.CompanyLive.Form` with `live_action: :edit` becomes `wave_web.root.company.edit`; a `handle_event "save"` becomes `wave_web.root.company.save` |
-| `params` | the raw params, with `:filter_keys` masked |
+| `Parameters:` | the raw params on their own indented line, with `:filter_keys` masked |
 | `user` | `id` and `email` of `socket.assigns.current_user` |
 | `resource` | full schema struct name of the record under the module's `:record` assign (see below), e.g. `Wave.Root.Company` |
 | `resource_id` | id of that record, falling back to `params["id"]` |
