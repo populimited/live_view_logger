@@ -6,8 +6,10 @@ defmodule Vox.Loggers.LiveView do
 
       :ok = Vox.Loggers.LiveView.attach(filter_keys: ["password"])
 
-  Logs `mount`, `handle_params` and `handle_event` stop/exception events as a
-  single line with action, filtered params, user, status, outcome and duration.
+  Logs `handle_params` and `handle_event` stop/exception events as a single
+  line with action, filtered params, user, status, outcome and duration.
+  `mount` exceptions are logged too; `mount` stop is skipped because
+  `handle_params` always runs right after mount and would duplicate the line.
 
   ## Per-module configuration
 
@@ -59,7 +61,6 @@ defmodule Vox.Loggers.LiveView do
   end
 
   @events [
-    [:phoenix, :live_view, :mount, :stop],
     [:phoenix, :live_view, :mount, :exception],
     [:phoenix, :live_view, :handle_params, :stop],
     [:phoenix, :live_view, :handle_params, :exception],

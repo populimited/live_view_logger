@@ -48,7 +48,7 @@ defmodule Vox.Loggers.LiveViewTest do
       log =
         capture_log(fn ->
           :telemetry.execute(
-            [:phoenix, :live_view, :mount, :stop],
+            [:phoenix, :live_view, :handle_params, :stop],
             %{duration: native_us(1_500)},
             %{socket: socket(%{live_action: :index}), params: %{}}
           )
@@ -56,6 +56,21 @@ defmodule Vox.Loggers.LiveViewTest do
 
       assert log =~ "action=voxweb.user.index"
       assert log =~ "status=ok"
+    end
+
+    test "does not subscribe to mount stop" do
+      assert :ok = LiveView.attach()
+
+      log =
+        capture_log(fn ->
+          :telemetry.execute(
+            [:phoenix, :live_view, :mount, :stop],
+            %{duration: native_us(1_500)},
+            %{socket: socket(%{live_action: :index}), params: %{}}
+          )
+        end)
+
+      assert log == ""
     end
 
     test "uses the live_action as suffix when no event is given" do
