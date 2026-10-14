@@ -115,12 +115,13 @@ defmodule Vox.Loggers.LiveView do
 
     if connected?(socket) and
          metadata[:event] not in Keyword.get(opts, :skip_events, []) and assigns[:live_action] do
-      {action, resource_id} = build_action(socket, assigns, metadata, opts)
+      {action, resource, resource_id} = build_action(socket, assigns, metadata, opts)
 
       log!(
         action,
         filter_params(metadata[:params], opts),
         assigns[:current_user],
+        resource,
         resource_id,
         status_label,
         return_outcome,
@@ -145,19 +146,18 @@ defmodule Vox.Loggers.LiveView do
   defp build_action(socket, assigns, metadata, opts) do
     view_name = "#{socket.view}"
 
-    resource =
+    resource_path =
       view_name
-      |> String.replace("Elixir.", "")
-      |> String.replace("Live", "")
-      |> String.downcase()
-      |> String.split(".")
+      |> Macro.underscore()
+      |> String.split("/")
+      |> Enum.reject(&(&1 == "elixir"))
       |> Enum.drop(-1)
+      |> Enum.map(&String.replace_suffix(&1, "_live", ""))
+      |> Enum.join(".")
 
-    resource_id =
-      assigns_record_id(assigns, Keyword.get(opts, :record)) ||
-        get_in(metadata, [:params, "id"])
-
-    action = Enum.join(resource, ".")
+    record = assigns_record(assigns, Keyword.get(opts, :record))
+    resource = resource_name(record)
+    resource_id = (record && Map.get(record, :id)) || get_in(metadata, [:params, "id"])
 
     suffix =
       if is_nil(metadata[:event]),
@@ -165,19 +165,29 @@ defmodule Vox.Loggers.LiveView do
         else: metadata[:event]
 
     action =
-      [action, suffix]
+      [resource_path, suffix]
       |> Enum.reject(&(&1 == "" or is_nil(&1)))
       |> Enum.join(".")
 
-    {action, resource_id}
+    {action, resource, resource_id}
   end
 
-  defp assigns_record_id(_assigns, nil), do: nil
+  defp assigns_record(_assigns, nil), do: nil
 
-  defp assigns_record_id(assigns, key) do
+  defp assigns_record(assigns, key) do
     case Map.get(assigns, key) do
-      %{id: id} -> id
+      %{id: _} = record -> record
       _ -> nil
+    end
+  end
+
+  defp resource_name(record) do
+    case record do
+      %{__struct__: module} when is_atom(module) ->
+        module |> Module.split() |> List.last() |> Macro.underscore()
+
+      _ ->
+        nil
     end
   end
 
@@ -185,6 +195,7 @@ defmodule Vox.Loggers.LiveView do
          action,
          params,
          user,
+         resource,
          resource_id,
          status,
          return_outcome,
@@ -193,12 +204,13 @@ defmodule Vox.Loggers.LiveView do
     user = if user, do: "user=#{user.id} (#{user.email})"
     action = if action, do: "action=#{action}"
     params = if params, do: "params=#{params}"
+    resource = if resource, do: "resource=#{resource}"
     resource_id = if resource_id, do: "resource_id=#{resource_id}"
     duration = if duration, do: "duration=#{duration}ms"
     return_outcome = if return_outcome, do: "outcome=#{return_outcome}"
 
     Logger.info(
-      "LiveView #{action} #{params} #{user} #{resource_id} #{status} #{return_outcome} #{duration}"
+      "LiveView #{action} #{params} #{user} #{resource} #{resource_id} #{status} #{return_outcome} #{duration}"
     )
   end
 

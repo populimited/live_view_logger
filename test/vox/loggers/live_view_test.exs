@@ -15,6 +15,10 @@ defmodule VoxWeb.UserLive.Show do
   use Vox.Loggers.LiveView, record: :company
 end
 
+defmodule VoxWeb.Company do
+  defstruct [:id]
+end
+
 defmodule Vox.Loggers.LiveViewTest do
   use ExUnit.Case, async: false
 
@@ -54,7 +58,7 @@ defmodule Vox.Loggers.LiveViewTest do
           )
         end)
 
-      assert log =~ "action=voxweb.user.index"
+      assert log =~ "action=vox_web.user.index"
       assert log =~ "status=ok"
     end
 
@@ -96,7 +100,7 @@ defmodule Vox.Loggers.LiveViewTest do
           )
         end)
 
-      assert log =~ "action=voxweb.user.edit"
+      assert log =~ "action=vox_web.user.edit"
     end
   end
 
@@ -113,7 +117,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_event, :stop, %{duration: native_us(1_512)}, metadata)
         end)
 
-      assert log =~ "action=voxweb.user.save"
+      assert log =~ "action=vox_web.user.save"
       assert log =~ "resource_id=3"
       assert log =~ "params=%{\"id\" => \"3\"}"
       assert log =~ "user=7 (u@x.io)"
@@ -130,13 +134,13 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=voxweb.user.edit"
+      assert log =~ "action=vox_web.user.edit"
       refute log =~ "resource_id="
     end
 
     test "uses the :record assigns key as resource_id fallback" do
       metadata = %{
-        socket: socket_for(VoxWeb.UserLive.Show, :edit, %{company: %{id: 42}}),
+        socket: socket_for(VoxWeb.UserLive.Show, :edit, %{company: %VoxWeb.Company{id: 42}}),
         params: %{}
       }
 
@@ -145,13 +149,14 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=voxweb.user.edit"
+      assert log =~ "action=vox_web.user.edit"
+      assert log =~ "resource=company"
       assert log =~ "resource_id=42"
     end
 
     test "prefers the :record assigns over the params id" do
       metadata = %{
-        socket: socket_for(VoxWeb.UserLive.Show, :edit, %{company: %{id: 42}}),
+        socket: socket_for(VoxWeb.UserLive.Show, :edit, %{company: %VoxWeb.Company{id: 42}}),
         params: %{"id" => "99"}
       }
 
@@ -160,7 +165,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "resource_id=42"
+      assert log =~ "resource=company resource_id=42"
       refute log =~ "resource_id=99"
     end
 
@@ -172,7 +177,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=voxweb.user.validate"
+      assert log =~ "action=vox_web.user.validate"
     end
 
     test "skips sockets without a live_action" do
@@ -341,7 +346,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=voxweb.user.save"
+      assert log =~ "action=vox_web.user.save"
     end
 
     test "skips events from a module using the macro" do
