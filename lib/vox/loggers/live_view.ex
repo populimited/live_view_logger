@@ -144,7 +144,7 @@ defmodule Vox.Loggers.LiveView do
   defp user_field(user, field) do
     case Map.get(user, field) do
       nil -> nil
-      value -> "#{field}=#{value}"
+      value -> "user_#{field}=#{value}"
     end
   end
 

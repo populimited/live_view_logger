@@ -171,7 +171,7 @@ defmodule Vox.Loggers.LiveViewTest do
           )
         end)
 
-      assert log =~ "user_id=7 company_id=3"
+      assert log =~ "user_id=7 user_company_id=3"
     end
 
     test "prefers the :record assigns over the params id" do
