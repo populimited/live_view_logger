@@ -4,7 +4,7 @@ defmodule Vox.Loggers.LiveView do
 
   Attach in your application supervisor:
 
-      :ok = Vox.Loggers.LiveView.attach(filter_keys: ["password"])
+      :ok = Vox.Loggers.LiveView.attach(filtered_params: ["password"])
 
   Logs `handle_params` and `handle_event` stop/exception events as a single
   line with action, filtered params, user, status, outcome and duration.
@@ -77,7 +77,7 @@ defmodule Vox.Loggers.LiveView do
 
   ## Options
 
-    * `:filter_keys` - param key names to mask as `"[FILTERED]"` in the log.
+    * `:filtered_params` - param key names to mask as `"[FILTERED]"` in the log.
       Matching is case-insensitive substring based (`"password"` masks
       `"password_confirmation"`). Defaults to `[]`, meaning no filtering.
     * `:user_fields` - fields of `socket.assigns.current_user` logged next
@@ -258,13 +258,13 @@ defmodule Vox.Loggers.LiveView do
 
   defp filter_params(params, opts) do
     params
-    |> filter_values(filter_keys(opts))
+    |> filter_values(filtered_params(opts))
     |> inspect(limit: :infinity, printable_limit: 2000)
   end
 
   # Accepts a plain list of key names. Anything else is ignored.
-  defp filter_keys(opts) do
-    case Keyword.get(opts, :filter_keys, []) do
+  defp filtered_params(opts) do
+    case Keyword.get(opts, :filtered_params, []) do
       keys when is_list(keys) -> downcase_keys(keys)
       _ -> []
     end

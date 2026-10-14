@@ -263,7 +263,7 @@ defmodule Vox.Loggers.LiveViewTest do
       assert log =~ "outcome=re-rendered"
     end
 
-    test "masks params matching :filter_keys" do
+    test "masks params matching :filtered_params" do
       metadata = %{
         socket: socket(%{live_action: :index}),
         params: %{"password" => "hunter2", "id" => "3"}
@@ -272,14 +272,14 @@ defmodule Vox.Loggers.LiveViewTest do
       log =
         capture_log(fn ->
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
-            filter_keys: ["password"]
+            filtered_params: ["password"]
           )
         end)
 
       assert log =~ "\n  Parameters: %{\"id\" => \"3\", \"password\" => \"[FILTERED]\"}"
     end
 
-    test "masks atom-keyed params and substrings of :filter_keys" do
+    test "masks atom-keyed params and substrings of :filtered_params" do
       metadata = %{
         socket: socket(%{live_action: :index}),
         params: %{password_confirmation: "hunter2"}
@@ -288,27 +288,27 @@ defmodule Vox.Loggers.LiveViewTest do
       log =
         capture_log(fn ->
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
-            filter_keys: ["PASSWORD"]
+            filtered_params: ["PASSWORD"]
           )
         end)
 
       assert log =~ "\n  Parameters: %{password_confirmation: \"[FILTERED]\"}"
     end
 
-    test "ignores non-list :filter_keys values" do
+    test "ignores non-list :filtered_params values" do
       metadata = %{socket: socket(%{live_action: :index}), params: %{"password" => "hunter2"}}
 
       log =
         capture_log(fn ->
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
-            filter_keys: {:compiled, :bogus}
+            filtered_params: {:compiled, :bogus}
           )
         end)
 
       assert log =~ "\n  Parameters: %{\"password\" => \"hunter2\"}"
     end
 
-    test "logs params unfiltered without :filter_keys" do
+    test "logs params unfiltered without :filtered_params" do
       metadata = %{
         socket: socket(%{live_action: :index}),
         params: %{"password" => "hunter2"}

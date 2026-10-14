@@ -27,14 +27,14 @@ Attach in your application supervisor, in `start/2`:
 
 ### Options
 
-* `:filter_keys` - param key names masked as `"[FILTERED]"` in the log.
+* `:filtered_params` - param key names masked as `"[FILTERED]"` in the log.
   Matching is case-insensitive substring based, so `"password"` also masks
   `"password_confirmation"`. Defaults to `[]`, meaning no filtering.
 
 ```elixir
 :ok =
   Vox.Loggers.LiveView.attach(
-    filter_keys: ["password", "secret", "token"],
+    filtered_params: ["password", "secret", "token"],
     user_fields: [:provider_id]
   )
 ```
@@ -46,7 +46,7 @@ Pass the list yourself — the library knows nothing about Phoenix config.
 If you use Phoenix's `config :phoenix, :filter_parameters`, be aware that
 Phoenix rewrites that value into a compiled matcher tuple at boot, so it
 cannot be read back as a list. Keep your own key list (for example under
-`config :my_app, :log_filter_keys`) and pass it here.
+`config :my_app, :log_filtered_params`) and pass it here.
 
 ## What gets logged
 
@@ -61,7 +61,7 @@ LiveView action=wave_web.root.company.edit user_id=1 provider_id=4 schema=Compan
 | Field | Meaning |
 |---|---|
 | `action` | view path plus event name or `live_action`, snake cased: module `WaveWeb.Root.CompanyLive.Form` with `live_action: :edit` becomes `wave_web.root.company.edit`; a `handle_event "save"` becomes `wave_web.root.company.save` |
-| `Parameters:` | the raw params on their own indented line, with `:filter_keys` masked |
+| `Parameters:` | the raw params on their own indented line, with `:filtered_params` masked |
 | `user_id` | id of `socket.assigns.current_user`, followed by the fields listed in `:user_fields` as `field=value` |
 | `schema` | schema name of the record under the module's `:record` assign (see below), e.g. `Company` |
 | `<schema>_id` | id of that record, named after the schema (`company_id`), falling back to `params["id"] as `resource_id` when no `:record` is set |
