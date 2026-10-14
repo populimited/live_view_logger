@@ -1,8 +1,8 @@
 # LiveViewLogger
 
 Telemetry-driven logger for Phoenix LiveView lifecycle events. One log line
-per navigation and per live event, with action, filtered params, user,
-resource, status, outcome and duration.
+per navigation and per live event, with action, user, schema, status,
+outcome and duration — params on their own indented line.
 
 ## Installation
 
@@ -29,7 +29,10 @@ Attach in your application supervisor, in `start/2`:
 
 * `:filtered_params` - param key names masked as `"[FILTERED]"` in the log.
   Accepts atoms or strings; matching is case-insensitive substring based, so
-  `:password` also masks `"password_confirmation"`. Defaults to `[]`, meaning no filtering.
+  `:password` also masks `"password_confirmation"`. Defaults to `[]`,
+  meaning no filtering.
+* `:user_fields` - fields of `socket.assigns.current_user` logged next to
+  `user_id` as `user_<field>=<value>`. Defaults to `[]`.
 
 ```elixir
 :ok =
@@ -39,14 +42,21 @@ Attach in your application supervisor, in `start/2`:
   )
 ```
 
-* `:user_fields` - fields of `socket.assigns.current_user` logged next to
-  `user_id` as `user_<field>=<value>`. Defaults to `[]`.
+A common pattern is to keep these settings in your own config and pass them
+through:
 
-Pass the list yourself — the library knows nothing about Phoenix config.
-If you use Phoenix's `config :phoenix, :filter_parameters`, be aware that
-Phoenix rewrites that value into a compiled matcher tuple at boot, so it
-cannot be read back as a list. Keep your own key list (for example under
-`config :my_app, :log_filtered_params`) and pass it here.
+```elixir
+config :my_app, :lv_logger, filtered_params: [:password], user_fields: [:company_id]
+```
+
+```elixir
+:ok = Vox.Loggers.LiveView.attach(Application.get_env(:my_app, :lv_logger, []))
+```
+
+The library knows nothing about Phoenix config. If you use Phoenix's
+`config :phoenix, :filter_parameters`, be aware that Phoenix rewrites that
+value into a compiled matcher tuple at boot, so it cannot be read back as a
+list — keep your own key list and pass it here.
 
 ## What gets logged
 
@@ -61,13 +71,13 @@ LiveView action=wave_web.root.company.edit user_id=1 user_provider_id=4 schema=C
 | Field | Meaning |
 |---|---|
 | `action` | view path plus event name or `live_action`, snake cased: module `WaveWeb.Root.CompanyLive.Form` with `live_action: :edit` becomes `wave_web.root.company.edit`; a `handle_event "save"` becomes `wave_web.root.company.save` |
-| `Parameters:` | the raw params on their own indented line, with `:filtered_params` masked |
 | `user_id` | id of `socket.assigns.current_user`, followed by the fields listed in `:user_fields` as `user_<field>=<value>` |
 | `schema` | schema name of the record under the module's `:record` assign (see below), e.g. `Company` |
-| `<schema>_id` | id of that record, named after the schema (`company_id`), falling back to `params["id"] as `resource_id` when no `:record` is set |
+| `<schema>_id` | id of that record, named after the schema (`company_id`); falls back to `params["id"]` logged as `resource_id` when no `:record` is set |
 | `status` | `ok` or `error` (on telemetry `:exception` events) |
 | `outcome` | redirect target on redirect, `redirected` without a target, `re-rendered` when assigns changed, `no-change` otherwise, `error` on exceptions |
 | `duration` | handler duration in ms |
+| `Parameters:` | the raw params on their own indented line, with `:filtered_params` masked |
 
 Deliberately not logged:
 
@@ -104,11 +114,10 @@ end
 * `:skip_events` - list of event names (`handle_event` first argument) that
   are never logged.
 * `:record` - name of the assigns key holding the loaded resource, for
-  example `:company` when the view assigns the schema as
-  `assigns.company`. The struct's `:id` is the preferred `resource_id` and
-  its schema name is logged as `schema=` (e.g. `Company`) and its id as `<schema_name>_id` (e.g. `company_id`); params `"id"` is the fallback, logged as `resource_id`.
-  Without `:record`, no `resource` is logged and `resource_id` comes from
-  params only.
+  example `:company` when the view assigns the schema as `assigns.company`.
+  The struct's schema name is logged as `schema=Company` and its `:id` as
+  `company_id=<id>`. Without `:record`, no `schema` is logged and the id
+  falls back to `params["id"]`, logged as `resource_id=<id>`.
 
 Both options are per module only — they cannot be set globally via
 `attach/1`.

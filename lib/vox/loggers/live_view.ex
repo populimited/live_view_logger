@@ -4,15 +4,15 @@ defmodule Vox.Loggers.LiveView do
 
   Attach in your application supervisor:
 
-      :ok = Vox.Loggers.LiveView.attach(filtered_params: ["password"])
+      :ok = Vox.Loggers.LiveView.attach(filtered_params: [:password])
 
   Logs `handle_params` and `handle_event` stop/exception events as a single
-  line with action, filtered params, user, status, outcome and duration.
-  `mount` exceptions are logged too; `mount` stop is skipped because
-  `handle_params` always runs right after mount and would duplicate the line.
-  Only connected invocations log: on a full page load LiveView renders both
-  disconnected and connected, and the disconnected run would duplicate the
-  websocket one.
+  line with action, user, schema, status, outcome and duration — params on
+  their own indented line. `mount` exceptions are logged too; `mount` stop
+  is skipped because `handle_params` always runs right after mount and
+  would duplicate the line. Only connected invocations log: on a full page
+  load LiveView renders both disconnected and connected, and the
+  disconnected run would duplicate the websocket one.
 
   ## Per-module configuration
 
@@ -78,10 +78,11 @@ defmodule Vox.Loggers.LiveView do
   ## Options
 
     * `:filtered_params` - param key names to mask as `"[FILTERED]"` in the log.
-      Matching is case-insensitive substring based (`"password"` masks
-      `"password_confirmation"`). Defaults to `[]`, meaning no filtering.
+      Accepts atoms or strings; matching is case-insensitive substring based
+      (`:password` masks `"password_confirmation"`). Defaults to `[]`,
+      meaning no filtering.
     * `:user_fields` - fields of `socket.assigns.current_user` logged next
-      to `user_id`, as `field=value`. Defaults to `[]`.
+      to `user_id`, as `user_<field>=<value>`. Defaults to `[]`.
 
   `:skip_events` and `:record` can only be set per module, via
   `logger_opts/0`.
