@@ -47,7 +47,7 @@ A single line per `handle_params` and `handle_event` invocation, plus
 `mount` exceptions:
 
 ```
-LiveView action=wave_web.root.company.edit user=1 (daniele@dev.com) resource=Wave.Root.Company resource_id=1 status=ok outcome=re-rendered duration=1.7ms
+LiveView action=wave_web.root.company.edit user=1 (daniele@dev.com) schema=Company resource_id=1 status=ok outcome=re-rendered duration=1.7ms
   Parameters: %{"id" => "1"}
 ```
 
@@ -56,7 +56,7 @@ LiveView action=wave_web.root.company.edit user=1 (daniele@dev.com) resource=Wav
 | `action` | view path plus event name or `live_action`, snake cased: module `WaveWeb.Root.CompanyLive.Form` with `live_action: :edit` becomes `wave_web.root.company.edit`; a `handle_event "save"` becomes `wave_web.root.company.save` |
 | `Parameters:` | the raw params on their own indented line, with `:filter_keys` masked |
 | `user` | `id` and `email` of `socket.assigns.current_user` |
-| `resource` | full schema struct name of the record under the module's `:record` assign (see below), e.g. `Wave.Root.Company` |
+| `schema` | schema name of the record under the module's `:record` assign (see below), e.g. `Company` |
 | `resource_id` | id of that record, falling back to `params["id"]` |
 | `status` | `ok` or `error` (on telemetry `:exception` events) |
 | `outcome` | redirect target on redirect, `redirected` without a target, `re-rendered` when assigns changed, `no-change` otherwise, `error` on exceptions |
@@ -99,7 +99,7 @@ end
 * `:record` - name of the assigns key holding the loaded resource, for
   example `:company` when the view assigns the schema as
   `assigns.company`. The struct's `:id` is the preferred `resource_id` and
-  its full struct name becomes `resource` (e.g. `Wave.Root.Company`); params `"id"` is the fallback.
+  its schema name is logged as `schema=` (e.g. `Company`); params `"id"` is the fallback.
   Without `:record`, no `resource` is logged and `resource_id` comes from
   params only.
 

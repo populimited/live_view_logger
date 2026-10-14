@@ -150,7 +150,7 @@ defmodule Vox.Loggers.LiveViewTest do
         end)
 
       assert log =~ "action=vox_web.user.edit"
-      assert log =~ "resource=VoxWeb.Company"
+      assert log =~ "schema=Company"
       assert log =~ "resource_id=42"
     end
 
@@ -165,7 +165,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "resource=VoxWeb.Company resource_id=42"
+      assert log =~ "schema=Company resource_id=42"
       refute log =~ "resource_id=99"
     end
 
