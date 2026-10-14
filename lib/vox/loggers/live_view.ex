@@ -211,7 +211,7 @@ defmodule Vox.Loggers.LiveView do
 
   # Params
 
-  defp filter_params(nil, _filter_keys), do: nil
+  defp filter_params(nil, _filter), do: nil
 
   defp filter_params(params, opts) do
     params
@@ -219,18 +219,33 @@ defmodule Vox.Loggers.LiveView do
     |> inspect(limit: :infinity, printable_limit: 2000)
   end
 
-  defp filter_keys(opts),
-    do: opts |> Keyword.get(:filter_keys, []) |> Enum.map(&String.downcase/1)
-
-  defp filter_values(%module{} = struct, _keys) when is_atom(module), do: struct
-
-  defp filter_values(%{} = map, keys) do
-    Map.new(map, fn {key, value} -> {key, filter_value(key, value, keys)} end)
+  # Accepts a plain list of key names. Anything else is ignored.
+  defp filter_keys(opts) do
+    case Keyword.get(opts, :filter_keys, []) do
+      keys when is_list(keys) -> downcase_keys(keys)
+      _ -> []
+    end
   end
 
-  defp filter_values(list, keys) when is_list(list), do: Enum.map(list, &filter_values(&1, keys))
+  defp downcase_keys(keys) do
+    Enum.map(keys, fn
+      key when is_binary(key) -> String.downcase(key)
+      key when is_atom(key) -> key |> Atom.to_string() |> String.downcase()
+      _ -> nil
+    end)
+    |> Enum.reject(&is_nil/1)
+  end
 
-  defp filter_values(other, _keys), do: other
+  defp filter_values(%module{} = struct, _filter) when is_atom(module), do: struct
+
+  defp filter_values(%{} = map, filter) do
+    Map.new(map, fn {key, value} -> {key, filter_value(key, value, filter)} end)
+  end
+
+  defp filter_values(list, filter) when is_list(list),
+    do: Enum.map(list, &filter_values(&1, filter))
+
+  defp filter_values(other, _filter), do: other
 
   defp filter_value(key, value, keys) do
     if key_match?(key, keys), do: "[FILTERED]", else: filter_values(value, keys)

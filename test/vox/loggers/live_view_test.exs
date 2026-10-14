@@ -244,6 +244,19 @@ defmodule Vox.Loggers.LiveViewTest do
       assert log =~ "params=%{password_confirmation: \"[FILTERED]\"}"
     end
 
+    test "ignores non-list :filter_keys values" do
+      metadata = %{socket: socket(%{live_action: :index}), params: %{"password" => "hunter2"}}
+
+      log =
+        capture_log(fn ->
+          emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
+            filter_keys: {:compiled, :bogus}
+          )
+        end)
+
+      assert log =~ "params=%{\"password\" => \"hunter2\"}"
+    end
+
     test "logs params unfiltered without :filter_keys" do
       metadata = %{
         socket: socket(%{live_action: :index}),
