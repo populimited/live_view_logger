@@ -32,8 +32,15 @@ Attach in your application supervisor, in `start/2`:
   `"password_confirmation"`. Defaults to `[]`, meaning no filtering.
 
 ```elixir
-:ok = Vox.Loggers.LiveView.attach(filter_keys: ["password", "secret", "token"])
+:ok =
+  Vox.Loggers.LiveView.attach(
+    filter_keys: ["password", "secret", "token"],
+    user_fields: [:provider_id]
+  )
 ```
+
+* `:user_fields` - fields of `socket.assigns.current_user` logged next to
+  `user_id` as `field=value`. Defaults to `[]`.
 
 Pass the list yourself — the library knows nothing about Phoenix config.
 If you use Phoenix's `config :phoenix, :filter_parameters`, be aware that
@@ -47,7 +54,7 @@ A single line per `handle_params` and `handle_event` invocation, plus
 `mount` exceptions:
 
 ```
-LiveView action=wave_web.root.company.edit user=1 (daniele@dev.com) schema=Company company_id=1 status=ok outcome=re-rendered duration=1.7ms
+LiveView action=wave_web.root.company.edit user_id=1 provider_id=4 schema=Company company_id=1 status=ok outcome=re-rendered duration=1.7ms
   Parameters: %{"id" => "1"}
 ```
 
@@ -55,7 +62,7 @@ LiveView action=wave_web.root.company.edit user=1 (daniele@dev.com) schema=Compa
 |---|---|
 | `action` | view path plus event name or `live_action`, snake cased: module `WaveWeb.Root.CompanyLive.Form` with `live_action: :edit` becomes `wave_web.root.company.edit`; a `handle_event "save"` becomes `wave_web.root.company.save` |
 | `Parameters:` | the raw params on their own indented line, with `:filter_keys` masked |
-| `user` | `id` and `email` of `socket.assigns.current_user` |
+| `user_id` | id of `socket.assigns.current_user`, followed by the fields listed in `:user_fields` as `field=value` |
 | `schema` | schema name of the record under the module's `:record` assign (see below), e.g. `Company` |
 | `<schema>_id` | id of that record, named after the schema (`company_id`), falling back to `params["id"] as `resource_id` when no `:record` is set |
 | `status` | `ok` or `error` (on telemetry `:exception` events) |

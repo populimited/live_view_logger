@@ -80,6 +80,8 @@ defmodule Vox.Loggers.LiveView do
     * `:filter_keys` - param key names to mask as `"[FILTERED]"` in the log.
       Matching is case-insensitive substring based (`"password"` masks
       `"password_confirmation"`). Defaults to `[]`, meaning no filtering.
+    * `:user_fields` - fields of `socket.assigns.current_user` logged next
+      to `user_id`, as `field=value`. Defaults to `[]`.
 
   `:skip_events` and `:record` can only be set per module, via
   `logger_opts/0`.
@@ -121,13 +123,28 @@ defmodule Vox.Loggers.LiveView do
       log!(
         action,
         filter_params(metadata[:params], opts),
-        assigns[:current_user],
+        user_label(assigns[:current_user], Keyword.get(opts, :user_fields, [])),
         resource,
         resource_id,
         status_label,
         return_outcome,
         duration_ms(measurements[:duration])
       )
+    end
+  end
+
+  defp user_label(nil, _fields), do: nil
+
+  defp user_label(user, fields) do
+    ["user_id=#{user.id}" | Enum.map(fields, &user_field(user, &1))]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+  end
+
+  defp user_field(user, field) do
+    case Map.get(user, field) do
+      nil -> nil
+      value -> "#{field}=#{value}"
     end
   end
 
@@ -198,7 +215,6 @@ defmodule Vox.Loggers.LiveView do
          return_outcome,
          duration
        ) do
-    user = if user, do: "user=#{user.id} (#{user.email})"
     action = if action, do: "action=#{action}"
     params = if params, do: "\n  Parameters: #{params}"
 

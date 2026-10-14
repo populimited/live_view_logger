@@ -120,7 +120,7 @@ defmodule Vox.Loggers.LiveViewTest do
       assert log =~ "action=vox_web.user.save"
       assert log =~ "resource_id=3"
       assert log =~ "\n  Parameters: %{\"id\" => \"3\"}"
-      assert log =~ "user=7 (u@x.io)"
+      assert log =~ "user_id=7"
       assert log =~ "status=ok"
       assert log =~ "outcome=no-change"
       assert log =~ "duration=1.5ms"
@@ -152,6 +152,26 @@ defmodule Vox.Loggers.LiveViewTest do
       assert log =~ "action=vox_web.user.edit"
       assert log =~ "schema=Company"
       assert log =~ "company_id=42"
+    end
+
+    test "logs configured :user_fields next to user_id" do
+      metadata = %{
+        socket:
+          socket(%{
+            live_action: :index,
+            current_user: %{id: 7, email: "u@x.io", company_id: 3}
+          }),
+        params: %{}
+      }
+
+      log =
+        capture_log(fn ->
+          emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
+            user_fields: [:company_id]
+          )
+        end)
+
+      assert log =~ "user_id=7 company_id=3"
     end
 
     test "prefers the :record assigns over the params id" do
