@@ -272,7 +272,7 @@ defmodule Vox.Loggers.LiveViewTest do
       log =
         capture_log(fn ->
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
-            filtered_params: ["password"]
+            filtered_params: [:password]
           )
         end)
 
@@ -288,7 +288,7 @@ defmodule Vox.Loggers.LiveViewTest do
       log =
         capture_log(fn ->
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata,
-            filtered_params: ["PASSWORD"]
+            filtered_params: [:PASSWORD]
           )
         end)
 

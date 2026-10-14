@@ -28,13 +28,13 @@ Attach in your application supervisor, in `start/2`:
 ### Options
 
 * `:filtered_params` - param key names masked as `"[FILTERED]"` in the log.
-  Matching is case-insensitive substring based, so `"password"` also masks
-  `"password_confirmation"`. Defaults to `[]`, meaning no filtering.
+  Accepts atoms or strings; matching is case-insensitive substring based, so
+  `:password` also masks `"password_confirmation"`. Defaults to `[]`, meaning no filtering.
 
 ```elixir
 :ok =
   Vox.Loggers.LiveView.attach(
-    filtered_params: ["password", "secret", "token"],
+    filtered_params: [:password, :secret, :token],
     user_fields: [:provider_id]
   )
 ```
