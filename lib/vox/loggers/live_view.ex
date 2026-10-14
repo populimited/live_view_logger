@@ -181,15 +181,9 @@ defmodule Vox.Loggers.LiveView do
     end
   end
 
-  defp resource_name(record) do
-    case record do
-      %{__struct__: module} when is_atom(module) ->
-        module |> Module.split() |> List.last() |> Macro.underscore()
+  defp resource_name(%{__struct__: module}) when is_atom(module), do: inspect(module)
 
-      _ ->
-        nil
-    end
-  end
+  defp resource_name(_), do: nil
 
   defp log!(
          action,
