@@ -58,6 +58,17 @@ defmodule Vox.Loggers.LiveViewTest do
       assert log =~ "status=ok"
     end
 
+    test "skips disconnected invocations" do
+      metadata = %{socket: disconnected_socket(%{live_action: :index}), params: %{}}
+
+      log =
+        capture_log(fn ->
+          emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
+        end)
+
+      assert log == ""
+    end
+
     test "does not subscribe to mount stop" do
       assert :ok = LiveView.attach()
 
@@ -349,16 +360,22 @@ defmodule Vox.Loggers.LiveViewTest do
     LiveView.handle_event([:phoenix, :live_view, action, status], measurements, metadata, opts)
   end
 
-  defp socket(assigns \\ %{}, view \\ VoxWeb.UserLive.Index) do
-    %{
+  defp socket(assigns \\ %{}, view \\ VoxWeb.UserLive.Index, connected? \\ true) do
+    base = %{
       view: view,
       assigns: Map.merge(%{__changed__: %{}}, Map.new(assigns)),
       redirected: nil
     }
+
+    if connected?, do: Map.put(base, :transport_pid, self()), else: base
   end
 
   defp socket_for(view, live_action, assigns \\ %{}) do
     socket(Map.merge(%{live_action: live_action}, assigns), view)
+  end
+
+  defp disconnected_socket(assigns \\ %{}, view \\ VoxWeb.UserLive.Index) do
+    socket(assigns, view, false)
   end
 
   defp native_us(us), do: System.convert_time_unit(us, :microsecond, :native)

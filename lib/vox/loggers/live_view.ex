@@ -10,6 +10,9 @@ defmodule Vox.Loggers.LiveView do
   line with action, filtered params, user, status, outcome and duration.
   `mount` exceptions are logged too; `mount` stop is skipped because
   `handle_params` always runs right after mount and would duplicate the line.
+  Only connected invocations log: on a full page load LiveView renders both
+  disconnected and connected, and the disconnected run would duplicate the
+  websocket one.
 
   ## Per-module configuration
 
@@ -110,7 +113,8 @@ defmodule Vox.Loggers.LiveView do
     status_label = if status == :stop, do: "status=ok", else: "status=error"
     return_outcome = return_outcome(socket, fun, status)
 
-    if metadata[:event] not in Keyword.get(opts, :skip_events, []) and assigns[:live_action] do
+    if connected?(socket) and
+         metadata[:event] not in Keyword.get(opts, :skip_events, []) and assigns[:live_action] do
       {action, resource_id} = build_action(socket, assigns, metadata, opts)
 
       log!(
@@ -124,6 +128,11 @@ defmodule Vox.Loggers.LiveView do
       )
     end
   end
+
+  # LiveView mounts twice on a full page load: once disconnected, during the
+  # HTTP render, and once connected over the websocket. The disconnected run
+  # always duplicates the connected one, so only connected invocations log.
+  defp connected?(socket), do: not is_nil(Map.get(socket, :transport_pid))
 
   defp view_opts(view) do
     if Code.ensure_loaded?(view) and function_exported?(view, :logger_opts, 0) do
