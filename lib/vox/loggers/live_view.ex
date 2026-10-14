@@ -27,8 +27,8 @@ defmodule Vox.Loggers.LiveView do
 
   * `:skip_events` - event names never logged.
   * `:record` - name of the assigns key holding the loaded resource. Its
-    `:id` is the preferred `resource_id`, its schema name is logged as
-    `schema=`; params `"id"` is the `resource_id` fallback.
+    `:id` is logged as `<schema_name>_id` (e.g. `company_id`) and its
+    schema name as `schema=`; params `"id"` is the `resource_id` fallback.
 
   These options are per module only and cannot be set globally via
   `attach/1`. The callback can also be implemented directly:
@@ -201,8 +201,16 @@ defmodule Vox.Loggers.LiveView do
     user = if user, do: "user=#{user.id} (#{user.email})"
     action = if action, do: "action=#{action}"
     params = if params, do: "\n  Parameters: #{params}"
+
+    id_field =
+      if resource do
+        resource |> Macro.underscore() |> Kernel.<>("_id")
+      else
+        "resource_id"
+      end
+
     resource = if resource, do: "schema=#{resource}"
-    resource_id = if resource_id, do: "resource_id=#{resource_id}"
+    resource_id = if resource_id, do: "#{id_field}=#{resource_id}"
     duration = if duration, do: "duration=#{duration}ms"
     return_outcome = if return_outcome, do: "outcome=#{return_outcome}"
 

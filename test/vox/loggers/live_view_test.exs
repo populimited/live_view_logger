@@ -151,7 +151,7 @@ defmodule Vox.Loggers.LiveViewTest do
 
       assert log =~ "action=vox_web.user.edit"
       assert log =~ "schema=Company"
-      assert log =~ "resource_id=42"
+      assert log =~ "company_id=42"
     end
 
     test "prefers the :record assigns over the params id" do
@@ -165,8 +165,8 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "schema=Company resource_id=42"
-      refute log =~ "resource_id=99"
+      assert log =~ "schema=Company company_id=42"
+      refute log =~ "company_id=99"
     end
 
     test "logs validate events by default" do
