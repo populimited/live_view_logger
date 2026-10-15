@@ -95,7 +95,7 @@ module, either with the `use` macro:
 ```elixir
 defmodule MyAppWeb.CompanyLive.Form do
   use Phoenix.LiveView
-  use Vox.Loggers.LiveView, skip_events: ["validate"], record: :company
+  use Vox.Loggers.LiveView, skip_events: [:validate], record: :company
 end
 ```
 
@@ -105,14 +105,14 @@ or by implementing the optional `logger_opts/0` callback directly:
 defmodule MyAppWeb.CompanyLive.Form do
   @behaviour Vox.Loggers.LiveView
 
-  def logger_opts, do: [skip_events: ["validate"], record: :company]
+  def logger_opts, do: [skip_events: [:validate], record: :company]
 end
 ```
 
 ### Options
 
 * `:skip_events` - list of event names (`handle_event` first argument) that
-  are never logged.
+  are never logged. Accepts atoms or strings.
 * `:record` - name of the assigns key holding the loaded resource, for
   example `:company` when the view assigns the schema as `assigns.company`.
   The struct's schema name is logged as `schema=Company` and its `:id` as

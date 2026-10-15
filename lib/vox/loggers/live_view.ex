@@ -22,7 +22,7 @@ defmodule Vox.Loggers.LiveView do
 
       defmodule VoxWeb.UserLive.Index do
         use Phoenix.LiveView
-        use Vox.Loggers.LiveView, skip_events: ["validate", "filter"], record: :user
+        use Vox.Loggers.LiveView, skip_events: [:validate, :filter], record: :user
       end
 
   * `:skip_events` - event names never logged.
@@ -35,7 +35,7 @@ defmodule Vox.Loggers.LiveView do
 
       defmodule VoxWeb.UserLive.Index do
         @behaviour Vox.Loggers.LiveView
-        def logger_opts, do: [skip_events: ["validate"]]
+        def logger_opts, do: [skip_events: [:validate]]
       end
   """
 
@@ -53,7 +53,7 @@ defmodule Vox.Loggers.LiveView do
   @doc """
   Declares the `logger_opts/0` callback with the given opts.
 
-      use Vox.Loggers.LiveView, skip_events: ["validate"]
+      use Vox.Loggers.LiveView, skip_events: [:validate]
   """
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
@@ -118,7 +118,7 @@ defmodule Vox.Loggers.LiveView do
     return_outcome = return_outcome(socket, fun, status)
 
     if connected?(socket) and
-         metadata[:event] not in Keyword.get(opts, :skip_events, []) and assigns[:live_action] do
+         metadata[:event] not in skip_events(opts) and assigns[:live_action] do
       {action, resource, resource_id} = build_action(socket, assigns, metadata, opts)
 
       log!(
@@ -153,6 +153,17 @@ defmodule Vox.Loggers.LiveView do
   # HTTP render, and once connected over the websocket. The disconnected run
   # always duplicates the connected one, so only connected invocations log.
   defp connected?(socket), do: not is_nil(Map.get(socket, :transport_pid))
+
+  # LiveView emits event names as strings, but config reads better with
+  # atoms — accept both.
+  defp skip_events(opts) do
+    opts
+    |> Keyword.get(:skip_events, [])
+    |> Enum.map(fn
+      event when is_atom(event) -> Atom.to_string(event)
+      event when is_binary(event) -> event
+    end)
+  end
 
   defp view_opts(view) do
     if Code.ensure_loaded?(view) and function_exported?(view, :logger_opts, 0) do

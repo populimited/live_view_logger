@@ -4,11 +4,11 @@ end
 defmodule VoxWeb.UserLive.Settings do
   @behaviour Vox.Loggers.LiveView
 
-  def logger_opts, do: [skip_events: ["purge"]]
+  def logger_opts, do: [skip_events: [:purge]]
 end
 
 defmodule VoxWeb.UserLive.Form do
-  use Vox.Loggers.LiveView, skip_events: ["save"]
+  use Vox.Loggers.LiveView, skip_events: [:save]
 end
 
 defmodule VoxWeb.UserLive.Show do
