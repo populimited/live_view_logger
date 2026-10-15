@@ -157,12 +157,7 @@ defmodule Vox.Loggers.LiveView do
   # LiveView emits event names as strings, but config reads better with
   # atoms — accept both.
   defp skip_events(opts) do
-    opts
-    |> Keyword.get(:skip_events, [])
-    |> Enum.map(fn
-      event when is_atom(event) -> Atom.to_string(event)
-      event when is_binary(event) -> event
-    end)
+    opts |> Keyword.get(:skip_events, []) |> Enum.map(&to_string/1)
   end
 
   defp view_opts(view) do
