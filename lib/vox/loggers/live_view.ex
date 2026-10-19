@@ -16,16 +16,18 @@ defmodule Vox.Loggers.LiveView do
 
   ## Per-module configuration
 
-  By default every `handle_event` is logged. A LiveView module can skip
-  specific events by declaring the `logger_opts/0` callback. Easiest via
-  `use`:
+  By default every `handle_event` is logged, except `validate`, which is
+  always skipped globally (high-frequency, no auditable state change). A
+  LiveView module can skip further events by declaring the `logger_opts/0`
+  callback. Easiest via `use`:
 
       defmodule VoxWeb.UserLive.Index do
         use Phoenix.LiveView
-        use Vox.Loggers.LiveView, skip_events: [:validate, :filter], record: :user
+        use Vox.Loggers.LiveView, skip_events: [:filter], record: :user
       end
 
-  * `:skip_events` - event names never logged.
+  * `:skip_events` - additional event names never logged. `validate` is
+    always skipped and cannot be un-skipped.
   * `:record` - name of the assigns key holding the loaded resource. Its
     `:id` is logged as `<schema_name>_id` (e.g. `company_id`) and its
     schema name as `schema=`; params `"id"` is the `resource_id` fallback.
@@ -117,8 +119,7 @@ defmodule Vox.Loggers.LiveView do
     status_label = if status == :stop, do: "status=ok", else: "status=error"
     return_outcome = return_outcome(socket, fun, status)
 
-    if connected?(socket) and
-         metadata[:event] not in skip_events(opts) and assigns[:live_action] do
+    if log?(socket, metadata, opts) do
       {action, resource, resource_id} = build_action(socket, assigns, metadata, opts)
 
       log!(
@@ -154,10 +155,38 @@ defmodule Vox.Loggers.LiveView do
   # always duplicates the connected one, so only connected invocations log.
   defp connected?(socket), do: not is_nil(Map.get(socket, :transport_pid))
 
+  # Decides whether a lifecycle event should be logged. All conditions must
+  # hold:
+  #
+  #   * connected? - the disconnected render on a full page load duplicates
+  #     the connected (websocket) run, so only the connected run logs.
+  #
+  #   * not in skip_events - per-module opt-out (plus a global skip of
+  #     `validate`, which is high-frequency noise and not auditable state
+  #     change).
+  #
+  #   * event or live_action present - skip events we cannot attribute to
+  #     anything meaningful:
+  #     * `handle_params` only logs for routed LiveViews, which are the only
+  #       ones the router tags with `live_action`. Views embedded with
+  #       `live_render` - nested on a LiveView page or dropped into a plain
+  #       controller-rendered template - have no `live_action`; their params
+  #       are not navigations and would only duplicate the surrounding
+  #       page's access log line.
+  #     * a `handle_event` is identified by `metadata[:event]` and always
+  #       logs, with or without `live_action` - this is what makes form
+  #       submissions in `live_render`'d views auditable.
+  defp log?(socket, metadata, opts) do
+    connected?(socket) and
+      metadata[:event] not in skip_events(opts) and
+      (metadata[:event] || socket.assigns[:live_action])
+  end
+
   # LiveView emits event names as strings, but config reads better with
   # atoms — accept both.
   defp skip_events(opts) do
-    opts |> Keyword.get(:skip_events, []) |> Enum.map(&to_string/1)
+    [:validate | Keyword.get(opts, :skip_events, [])]
+    |> Enum.map(&to_string/1)
   end
 
   defp view_opts(view) do
