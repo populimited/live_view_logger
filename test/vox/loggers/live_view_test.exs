@@ -200,15 +200,27 @@ defmodule Vox.Loggers.LiveViewTest do
       refute log =~ "action=vox_web.user.validate"
     end
 
-    test "skips sockets without a live_action" do
+    test "logs events from views without a live_action (live_render)" do
+      metadata = %{socket: socket(), event: "save", params: %{}}
+
+      log =
+        capture_log(fn ->
+          emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata)
+        end)
+
+      assert log =~ "action=vox_web.user.save"
+      assert log =~ "status=ok"
+    end
+
+    test "skips handle_params on views without a live_action (live_render)" do
       metadata = %{socket: socket(), params: %{}}
 
       log =
         capture_log(fn ->
-          emit(:mount, :stop, %{duration: native_us(1_500)}, metadata)
+          emit(:handle_params, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      refute log =~ "LiveView action="
+      assert log == ""
     end
 
     test "logs status=error and outcome=error on exception" do
