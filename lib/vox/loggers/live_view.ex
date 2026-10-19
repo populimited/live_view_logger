@@ -118,7 +118,8 @@ defmodule Vox.Loggers.LiveView do
     return_outcome = return_outcome(socket, fun, status)
 
     if connected?(socket) and
-         metadata[:event] not in skip_events(opts) and assigns[:live_action] do
+         metadata[:event] not in skip_events(opts) and
+         (not is_nil(metadata[:event]) or not is_nil(assigns[:live_action])) do
       {action, resource, resource_id} = build_action(socket, assigns, metadata, opts)
 
       log!(
@@ -157,7 +158,8 @@ defmodule Vox.Loggers.LiveView do
   # LiveView emits event names as strings, but config reads better with
   # atoms — accept both.
   defp skip_events(opts) do
-    opts |> Keyword.get(:skip_events, []) |> Enum.map(&to_string/1)
+    [:validate | Keyword.get(opts, :skip_events, [])]
+    |> Enum.map(&to_string/1)
   end
 
   defp view_opts(view) do

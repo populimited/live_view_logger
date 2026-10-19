@@ -189,7 +189,7 @@ defmodule Vox.Loggers.LiveViewTest do
       refute log =~ "company_id=99"
     end
 
-    test "logs validate events by default" do
+    test "skips validate events by default" do
       metadata = %{socket: socket(%{live_action: :index}), event: "validate", params: %{}}
 
       log =
@@ -197,7 +197,7 @@ defmodule Vox.Loggers.LiveViewTest do
           emit(:handle_event, :stop, %{duration: native_us(1_500)}, metadata)
         end)
 
-      assert log =~ "action=vox_web.user.validate"
+      refute log =~ "action=vox_web.user.validate"
     end
 
     test "skips sockets without a live_action" do
@@ -399,7 +399,7 @@ defmodule Vox.Loggers.LiveViewTest do
     socket(Map.merge(%{live_action: live_action}, assigns), view)
   end
 
-  defp disconnected_socket(assigns \\ %{}, view \\ VoxWeb.UserLive.Index) do
+  defp disconnected_socket(assigns, view \\ VoxWeb.UserLive.Index) do
     socket(assigns, view, false)
   end
 
